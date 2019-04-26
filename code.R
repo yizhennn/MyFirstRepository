@@ -7,3 +7,6 @@ hist(x)
 fivenum(x)
 
 y<-rnorm(100)
+
+#新動作
+hist(y)
