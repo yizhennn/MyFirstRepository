@@ -1,0 +1,384 @@
+---
+title: "R markdown筆記整理"
+author: "王苡蓁"
+date: "5/16/2019"
+output: html_document
+---
+
+# 第一部分：簡介R markdownm用法
+
+1. 字體  
+
+# Header 1字最大    
+## Header 2    
+### Header 3    
+#### Header 4    
+##### Header 5    
+###### Header 6字最小  
+
+2. 列點  
+
+* 列點1
+* 列點2
+    + 子列點1
+    + 子列點2
+    
+    1. ordered list
+    2. item 2
+        + sub-item 1
+        + sub-item 2
+    
+
+3. 打出數符號  
+The first derivative of $h(\theta)$ = $2 \theta-4$  
+
+4. 插入網址  
+Please download data from [spams](https://www.kaggle.com/uciml/sms-spam-collection-dataset).
+
+5. 插入圖片  
+![ A: ](/Users/Apple/Desktop/note/機器學習/hw3-1-4.png)  
+
+
+6. 顯示粗體字
+
+**粗體**
+
+7. 跳出ㄧ格白色文字方匡  
+> Q1.計算2015年每個球隊的平均薪資：
+
+8. 製作表格
+
+|$(\theta)^{0}=5$, $\delta=1$   |  $(\theta )^{1}=-1$  | 
+|-------------------------------|----------------------|  
+|$(\theta)^{0}=5$, $\delta=0.5$ |  $(\theta )^{1}=2$   |
+|$(\theta)^{0}=5$, $\delta=0.2$ |  $(\theta )^{1}=3.8$ |  
+
+9. 插入分隔線
+
+*** 
+
+# 第二部分：畫直條圖 
+##  （以2017七期三次問卷I 社會階層為例  ）
+
+```{r,comment="",message=FALSE,warning=FALSE,echo=FALSE}
+Sys.setlocale(category="LC_ALL",locale="en_US.UTF-8")
+
+library(foreign)
+
+dta0<-read.csv("social10271.csv",header = TRUE,fileEncoding ="UTF-8")
+
+cl<-dta0$e2
+
+cl<-gsub("中上層階級",replacement="上層階級" ,cl)
+cl<-gsub("上層階級",replacement="上層階級" ,cl)
+cl<-gsub("下層階級",replacement="下層階級" ,cl)
+cl<-gsub("中下層階級",replacement="下層階級" ,cl)
+
+
+cl1<-as.factor(cl)
+library(ggplot2)
+
+#上中下階層直條圖（排序）
+cl2<-ordered(cl1,levels=c("上層階級","中層階級","下層階級","勞工階級","不知道","拒答"))
+par(family="DFKai-SB")  
+plot(cl2, xlab="請問你認為自己屬於哪個社會階層？", ylab="人數")+geom_bar()
+
+
+
+
+```
+
+
+
+
+```{r,comment="",message=FALSE,warning=FALSE,echo=FALSE}
+library(dplyr)
+library(tidyverse)
+
+f<-dta0 %>% select(d4)
+fo<-ordered(f,levels=c("人通常是可以被信任","人幾乎是可以被信任"," 與人交往通常要很小心","與人交往幾乎都要很小心","不知道","拒答"))
+  f1<-f %>% mutate(cl2)
+
+
+```
+
+* e2階層 和 f4快樂 (fill)  
+```{r,echo=FALSE}
+library(dplyr)
+library(tidyverse)
+
+d<-dta0$f4
+f4 <- factor(d,levels =c("很快樂","還算快樂","沒什麼快不快樂","不太快樂","很不快樂","不知道"))
+d1<-data.frame(cl2, f4) %>% na.omit(d1)
+  
+  
+library(ggplot2)
+ggplot(data = d1) + 
+  geom_bar(mapping = aes(x =cl2 , fill = f4), position = "fill")+
+   theme(text = element_text(family =  "DFKai-SB")) 
+
+```
+
+
+* e2階層 和 f4快樂 (dodge)  
+```{r,echo=FALSE}
+ggplot(data = d1) + 
+  geom_bar(mapping = aes(x =cl2 , fill = f4), position = "dodge")+
+   theme(text = element_text(family =  "DFKai-SB")) 
+
+```
+
+* 薪資分層（根據105年行政院每人每月薪資分布,四分位數）  
+1. 第 1 四分位數為 31,844 元  
+2. 中位數 40,612元  
+3. 第 3 四分位數為 55,091 元  
+
+
+
+
+```{r,echo=FALSE,include=FALSE}
+sa<-dta0$c24
+
+x="3萬元（含）以下"
+sa<-gsub("1-2萬元以下", x,sa)
+sa<-gsub("2-3萬元以下", x ,sa)
+sa<-gsub("8-9千元以下", x ,sa)
+sa<-gsub("8千-1萬元以下", x ,sa)
+sa<-gsub("6-8千元以下",x ,sa)
+sa<-gsub("4-6千元以下", x,sa)
+sa<-gsub("2-4千元以下", x ,sa)
+sa<-gsub("2千元以下", x ,sa)
+
+y="3-5萬元"
+sa<-gsub("3-4萬元以下",y ,sa)
+sa<-gsub("4-5萬元以下", y ,sa)
+
+z="5萬元（含）以上" 
+sa<-gsub("5-6萬元以下", z ,sa)
+sa<-gsub("6-7萬元以下", z ,sa)
+sa<-gsub("7-8萬元以下", z ,sa)
+sa<-gsub("8-9萬元以下", z,sa)
+sa<-gsub("9-10萬元以下", z ,sa)
+sa<-gsub("10-11萬元以下", z ,sa)
+sa<-gsub("11-12萬元以下", z ,sa)
+sa<-gsub("12-13萬元以下", z,sa)
+sa<-gsub("13-14萬元以下", z,sa)
+sa<-gsub("14-15萬元以下", z,sa)
+sa<-gsub("15-16萬元以下", z ,sa)
+sa<-gsub("16-17萬元以下", z ,sa)
+sa<-gsub("17-18萬元以下", z ,sa)
+sa<-gsub("18-19萬元以下", z,sa)
+sa<-gsub("19-20萬元以下", z ,sa)
+sa<-gsub("20-21萬元以下", z ,sa)
+sa<-gsub("20-30萬元以下", z,sa)
+sa<-gsub("29-30萬元以下", z ,sa)
+sa<-gsub("25萬元以上", z ,sa)
+sa<-gsub("30萬元以上", z ,sa)
+sa<-gsub("150萬元以上", z ,sa)
+
+
+saoo<-ordered(sa,levels=c("3萬元（含）以下","3-5萬元","5萬元（含）以上" ,"無收入","不知道","拒答","跳答","遺漏值"))
+qw<-select(dta0,c24,e2)
+
+qw$c24=saoo
+qw$e2=cl2
+
+sa<-dta0$c24
+
+x="3萬元（含）以下"
+sa<-gsub("1-2萬元以下", x,sa)
+sa<-gsub("2-3萬元以下", x ,sa)
+sa<-gsub("8-9千元以下", x ,sa)
+sa<-gsub("8千-1萬元以下", x ,sa)
+sa<-gsub("6-8千元以下",x ,sa)
+sa<-gsub("4-6千元以下", x,sa)
+sa<-gsub("2-4千元以下", x ,sa)
+sa<-gsub("2千元以下", x ,sa)
+
+y="3-5萬元"
+sa<-gsub("3-4萬元以下",y ,sa)
+sa<-gsub("4-5萬元以下", y ,sa)
+
+z="5萬元（含）以上" 
+sa<-gsub("5-6萬元以下", z ,sa)
+sa<-gsub("6-7萬元以下", z ,sa)
+sa<-gsub("7-8萬元以下", z ,sa)
+sa<-gsub("8-9萬元以下", z,sa)
+sa<-gsub("9-10萬元以下", z ,sa)
+sa<-gsub("10-11萬元以下", z ,sa)
+sa<-gsub("11-12萬元以下", z ,sa)
+sa<-gsub("12-13萬元以下", z,sa)
+sa<-gsub("13-14萬元以下", z,sa)
+sa<-gsub("14-15萬元以下", z,sa)
+sa<-gsub("15-16萬元以下", z ,sa)
+sa<-gsub("16-17萬元以下", z ,sa)
+sa<-gsub("17-18萬元以下", z ,sa)
+sa<-gsub("18-19萬元以下", z,sa)
+sa<-gsub("19-20萬元以下", z ,sa)
+sa<-gsub("20-21萬元以下", z ,sa)
+sa<-gsub("20-30萬元以下", z,sa)
+sa<-gsub("29-30萬元以下", z ,sa)
+sa<-gsub("25萬元以上", z ,sa)
+sa<-gsub("30萬元以上", z ,sa)
+sa<-gsub("150萬元以上", z ,sa)
+
+
+e3<-ordered(cl2,levels=c("上層階級","中層階級","下層階級" ,"勞工階級"))
+sao<-ordered(sa,levels=c("3萬元（含）以下","3-5萬元","5萬元（含）以上" ,"無收入"))
+
+
+qw<-select(dta0,c24,e2)
+
+qw$c24=sao
+qw$e2=e3
+
+
+qw<-na.omit(qw)
+
+```
+
+* 月薪X階層（dodge）  
+```{r,echo=FALSE}
+e3<-ordered(cl2,levels=c("上層階級","中層階級","下層階級" ,"勞工階級"))
+sao<-ordered(sa,levels=c("3萬元（含）以下","3-5萬元","5萬元（含）以上" ,"無收入"))
+qw<-select(dta0,c24,e2)
+
+qw$c24=sao
+qw$e2=e3
+
+
+qw<-na.omit(qw)
+library(ggplot2)
+ggplot(data = qw) + 
+  geom_bar(mapping = aes(x =e2, fill = c24), position = "dodge")+
+   theme(text = element_text(family =  "DFKai-SB")) 
+
+```
+
+
+* 月薪X階層（fill）  
+```{r,echo=FALSE}
+qw<-select(dta0,c24,e2)
+
+qw$c24=sao
+qw$e2=e3
+
+
+qw<-na.omit(qw)
+
+library(ggplot2)
+ggplot(data = qw) + 
+  geom_bar(mapping = aes(x =e2, fill = c24), position = "fill")+
+   theme(text = element_text(family =  "DFKai-SB")) 
+
+```
+
+* 月薪X階層（stack）  
+```{r,echo=FALSE}
+library(ggplot2)
+ggplot(data = qw) + 
+  geom_bar(mapping = aes(x =e2, fill = c24), position = "stack")+
+   theme(text = element_text(family =  "DFKai-SB")) 
+
+```
+
+
+# 第三部分：畫出比較漂亮的圖  
+## （以cpp實驗資料為例）  
+
+* 畫交互作用圖    
+```{r,comment="",message=FALSE,warning=FALSE,echo=FALSE}
+#CPP for ane_all_2
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(RColorBrewer)
+library(ggthemes)
+cpp <- read.table(file="cppdata_all2.csv",header = TRUE,sep=",")
+cpp$Subject<-as.factor(cpp$Subject)
+with(cpp, tapply(Percent, list(dose,test), mean)) 
+
+Test<-as.factor(ordered(cpp$test,levels=c("Pre","Post")))
+Dose<-as.factor(ordered(cpp$dose,levels=c("1mg","3mg","7.5mg","15mg","30mg")))
+
+CPP<-select(cpp,Percent,-dose,-test)%>% cbind(Dose) %>% cbind(Test)
+
+interaction.plot(CPP$Test, CPP$Dose, CPP$Percent,ylim=c(20,60))
+
+
+Test<-as.factor(ordered(cpp$test,levels=c("Pre","Post")))
+dose<-as.factor(ordered(cpp$dose,levels=c("1mg","3mg","7.5mg","15mg","30mg")))
+
+CPP<-select(cpp,Subject,Percent) %>% mutate(Test)%>%cbind(dose)
+
+tempdata = aggregate(CPP$Percent,
+                     by  =list(CPP$Test,CPP$dose),FUN=mean)
+tempdata2 = aggregate(CPP$Percent,
+                      by  =list(CPP$Test,CPP$dose),FUN=sd)
+tempdata3 = aggregate(CPP$Percent,
+                      by  =list(CPP$Test,CPP$dose),FUN=length)
+tempdata = cbind(tempdata,tempdata2[3])
+names(tempdata) = c('Test','dose','Percent','SE')
+tempdata[4] = tempdata[4]/sqrt(tempdata3[3])
+tempdata[2] = as.factor(tempdata[[2]])
+
+
+
+
+```
+
+* 畫折線圖  
+```{r,comment="",message=FALSE,warning=FALSE,echo=FALSE}
+#交互作用圖
+a=ggplot(data = tempdata,aes(x = dose,y = Percent,color = Test))+
+  geom_point(position = position_dodge(0.1))+
+  geom_errorbar(aes(x = dose, ymin = Percent-SE,ymax = Percent+SE,color = Test),position = position_dodge(0.1),width = 0.1)+
+  geom_line(aes(group = Test), position = position_dodge(0.1))+
+    xlab('Dose')+ ylab('Time Percentage Stay in Caffeine-Paired Chamber (%)')+
+  ggtitle('Percent Stay in Caffeine-Paired Chamber')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'Times'),
+        axis.title.x = element_text(family = "Times"),
+        axis.title.y = element_text(family = 'Times'),
+        axis.text.x = element_text(family = 'Times'),
+        axis.text.y = element_text(family = 'Times'),
+        legend.title = element_text(family = 'Times'),
+        legend.text = element_text(family = 'Times'))
+ 
+a=a            + scale_colour_brewer(palette = "Set1")
+a
+```
+
+* 加上標準差和顯著*的長條圖  
+```{r,comment="",message=FALSE,warning=FALSE,echo=FALSE}
+#前後測圖(anesth:all)
+p=ggplot(data = tempdata,aes(x = dose,y = Percent,fill = Test))+
+  geom_col(position = 'dodge', width = 0.5) +
+  geom_errorbar(aes(x = dose, ymin = Percent-SE,ymax = Percent+SE,color = Test),position = position_dodge(0.5),width = 0.1,color='black')+
+    xlab('Dose')+ ylab('% Preference Score to Caffeine-Paired Chamber (mean±SEM)')+
+  ggtitle('Place Conditioning in Anesthetized Rats')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'Times'),
+        axis.title.x = element_text(family = "Times"),
+        axis.title.y = element_text(family = 'Times'),
+        axis.text.x = element_text(family = 'Times'),
+        axis.text.y = element_text(family = 'Times'),
+        legend.title = element_text(family = 'Times'),
+        legend.text = element_text(family = 'Times'))
+
+p = p +
+  geom_segment(aes(x = 0.75,y=60,xend = 1.25,yend = 60)) +
+  geom_segment(aes(x = 1.75,y = 50,xend = 2.25,yend=50))+
+  geom_segment(aes(x= 2.75,y = 60,xend = 3.24,yend = 60)) +
+  geom_segment(aes(x= 3.75,y = 50,xend = 4.25,yend = 50))+
+  geom_segment(aes(x= 4.75,y = 80,xend = 5.25,yend = 80))+
+  annotate("text", x=1, y=62, label="n.s.", size=3)+
+  annotate("text", x=2, y=51, label="*", size=5)+
+  annotate("text", x=3, y=61, label="***", size=5)+
+  annotate("text", x=4, y=51, label="*", size=5)+
+  annotate("text", x=5, y=82, label="n.s.", size=3)+
+  scale_fill_manual(values=c('#999999','#E69F00'))
+p
+
+
+scale_fill_brewer(palette = "Paired")
+
+```
