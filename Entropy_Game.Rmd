@@ -1,0 +1,147 @@
+---
+title: "Entropy game"
+author: "王苡蓁"
+date: "2/25/2020"
+output: html_document
+---
+
+```{r,echo=FALSE ,message=FALSE, warning=FALSE,include=FALSE,eval=FALSE}
+library(ggplot2)
+library(tidyverse)
+track<-read.csv("entropy_game.csv")
+track
+
+gameA<-track %>% select(ax,ay) %>% rename("x"=ax, "y"=ay)
+gameB<-track %>% select(bx,by) %>% rename("x"=bx, "y"=by)
+gameC<-track %>% select(cx,cy) %>% rename("x"=cx, "y"=cy)
+gameD<-track %>% select(dx,dy) %>% rename("x"=dx, "y"=dy)
+
+
+plot(gameA$x,gameA$y)
+plot(gameB$x,gameB$y,type="o")
+plot(gameC$x,gameC$y,type="o")
+plot(gameD$x,gameD$y,type="o")
+
+
+plot(gameA$x,gameA$y,type="c")
+plot(gameA$x,gameA$y,type="o")
+plot(gameA$x,gameA$y,type="n")
+
+
+ggplot(data = gameA) +
+ # geom_line(mapping = aes(y = y, x = x)) + 
+  geom_point(mapping = aes(y = y, x = x)) +
+    xlab('X axis')+ ylab('Y axis')+
+  ggtitle('Game A')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = "Times New Roman"),
+        axis.title.x = element_text(family = "Times New Roman"),
+        axis.title.y = element_text(family = "Times New Roman"),
+        axis.text.x = element_text(family = "Times New Roman"),
+        axis.text.y = element_text(family = "Times New Roman"),
+        legend.title = element_text(family ="Times New Roman"),
+        legend.text = element_text(family = "Times New Roman"))
+```
+
+
+```{r ,message=FALSE, warning=FALSE,echo=FALSE }
+#繪製gif
+#devtools::install_github("ropensci/magick")
+
+library(ggplot2)
+library(tidyverse)
+track<-read.csv("entropy_game.csv")
+
+gameA<-track %>% select(ax,ay) %>% rename("x"=ax, "y"=ay)
+gameB<-track %>% select(bx,by) %>% rename("x"=bx, "y"=by)
+gameC<-track %>% select(cx,cy) %>% rename("x"=cx, "y"=cy)
+gameD<-track %>% select(dx,dy) %>% rename("x"=dx, "y"=dy)
+
+#GameA
+gameA
+
+img <- magick::image_graph()
+
+p<-plot(gameA$x,gameA$y,type="n")
+L<-length(gameA$x)
+
+for(i in c(1:L)){ 
+  t<-gameA[1:i,]
+  k<-gameA[i,]
+      pi<-p+plot(t$x,t$y,type="c",xlab="x",ylab="y",main="GameA",cex.lab=2,cex.main=2,
+          family = 'Times New Roman',col="black",xlim=c(0,6),ylim=c(0,4),pch=19)
+        ai<-pi+points(k,col="red",pch=19)
+          ai
+}
+
+dev.off()
+
+anim <-magick:: image_animate(img,fps =5)
+anim 
+
+
+#GameB
+gameB
+
+img <- magick::image_graph()
+
+p<-plot(gameB$x,gameB$y,type="n")##
+L<-length(gameB$x)##
+
+for(i in c(1:L)){ 
+  t<-gameB[1:i,]
+  k<-gameB[i,]
+      pi<-p+plot(t$x,t$y,type="c",xlab="x",ylab="y",main="GameB",cex.lab=2,cex.main=2,
+          family = 'Times New Roman',col="black",xlim=c(0,6),ylim=c(0,4),pch=19)
+        ai<-pi+points(k,col="red",pch=19)
+          ai
+}
+
+dev.off()
+
+animB <-magick:: image_animate(img,fps =5)
+animB 
+
+#GameC
+gameC
+img <- magick::image_graph()
+
+p<-plot(gameC$x,gameC$y,type="n")##
+L<-length(gameC$x)##
+
+for(i in c(1:L)){ 
+  t<-gameC[1:i,]
+  k<-gameC[i,]
+      pi<-p+plot(t$x,t$y,type="c",xlab="x",ylab="y",main="GameC",cex.lab=2,cex.main=2,
+          family = 'Times New Roman',col="black",xlim=c(0,6),ylim=c(0,4),pch=19)
+        ai<-pi+points(k,col="red",pch=19)
+          ai
+}
+
+dev.off()
+
+animC <-magick:: image_animate(img,fps =5)
+animC 
+
+
+#GameD
+gameD
+img <- magick::image_graph()
+
+p<-plot(gameD$x,gameD$y,type="n")##
+L<-length(gameD$x)##
+
+for(i in c(1:L)){ 
+  t<-gameD[1:i,]
+  k<-gameD[i,]
+      pi<-p+plot(t$x,t$y,type="c",xlab="x",ylab="y",main="GameD",cex.lab=2,cex.main=2,
+          family = 'Times New Roman',col="black",xlim=c(0,6),ylim=c(0,4),pch=19)
+        ai<-pi+points(k,col="red",pch=19)
+          ai
+}
+
+dev.off()
+
+animD <-magick:: image_animate(img,fps =5)
+animD
+
+```

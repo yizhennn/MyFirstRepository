@@ -1,0 +1,260 @@
+---
+title: "cpp_ane_all"
+author: "王苡蓁"
+date: "2019/2/24"
+output: html_document
+---
+
+```{r,echo=FALSE}
+###CPP for ane_all_2
+
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(RColorBrewer)
+
+library(ggthemes)
+
+cpp <- read.table(file="cppdata_all2.csv",header = TRUE,sep=",")
+head(cpp)
+cpp
+cpp$Subject<-as.factor(cpp$Subject)
+with(cpp, tapply(Percent, list(dose,test), mean)) 
+
+
+
+Test<-as.factor(ordered(cpp$test,levels=c("Pre-Test","Post-Test")))
+Dose<-as.factor(ordered(cpp$dose,levels=c("1mg","3mg","7.5mg","15mg","30mg")))
+
+CPP<-select(cpp,Percent,-dose,-test)%>% cbind(Dose) %>% cbind(Test)
+
+interaction.plot(CPP$Test, CPP$Dose, CPP$Percent)
+
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(RColorBrewer)
+
+library(ggthemes)
+
+
+Test<-as.factor(ordered(cpp$test,levels=c("Pre-Test","Post-Test")))
+dose<-as.factor(ordered(cpp$dose,levels=c("1mg","3mg","7.5mg","15mg","30mg")))
+
+CPP<-select(cpp,Subject,Percent) %>% mutate(Test)%>%cbind(dose)
+
+tempdata = aggregate(CPP$Percent,
+                     by  =list(CPP$Test,CPP$dose),FUN=mean)
+tempdata2 = aggregate(CPP$Percent,
+                      by  =list(CPP$Test,CPP$dose),FUN=sd)
+tempdata3 = aggregate(CPP$Percent,
+                      by  =list(CPP$Test,CPP$dose),FUN=length)
+tempdata = cbind(tempdata,tempdata2[3])
+names(tempdata) = c('Test','dose','Percent','SE')
+tempdata[4] = tempdata[4]/sqrt(tempdata3[3])
+tempdata[2] = as.factor(tempdata[[2]])
+
+##交互作用圖
+a=ggplot(data = tempdata,aes(x = dose,y = Percent,color = Test))+
+  geom_point(position = position_dodge(0.1))+
+  geom_errorbar(aes(x = dose, ymin = Percent-SE,ymax = Percent+SE,color = Test),position = position_dodge(0.1),width = 0.1)+
+  geom_line(aes(group = Test), position = position_dodge(0.1))+
+    xlab('Dose')+ ylab('Time Percentage Stay in Caffeine-Paired Chamber (%)')+
+  ggtitle('Percent Stay in Caffeine-Paired Chamber')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'Times'),
+        axis.title.x = element_text(family = "Times"),
+        axis.title.y = element_text(family = 'Times'),
+        axis.text.x = element_text(family = 'Times'),
+        axis.text.y = element_text(family = 'Times'),
+        legend.title = element_text(family = 'Times'),
+        legend.text = element_text(family = 'Times'))
+ 
+a=a            + scale_colour_brewer(palette = "Set1")
+a
+
+##前後測圖(anesth:all)
+p=ggplot(data = tempdata,aes(x = dose,y = Percent,fill = Test))+
+  geom_col(position = 'dodge', width = 0.5) +
+  geom_errorbar(aes(x = dose, ymin = Percent-SE,ymax = Percent+SE,color = Test),position = position_dodge(0.5),width = 0.1,color='black')+
+    xlab('Dose')+ ylab('% Preference Score to Caffeine-Paired Chamber (mean±SEM)')+
+  ggtitle('Place Conditioning in Anesthetized Rats')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'Times'),
+        axis.title.x = element_text(family = "Times"),
+        axis.title.y = element_text(family = 'Times'),
+        axis.text.x = element_text(family = 'Times'),
+        axis.text.y = element_text(family = 'Times'),
+        legend.title = element_text(family = 'Times'),
+        legend.text = element_text(family = 'Times'))
+
+p = p +
+  geom_segment(aes(x = 0.75,y=60,xend = 1.25,yend = 60)) +
+  geom_segment(aes(x = 1.75,y = 50,xend = 2.25,yend=50))+
+  geom_segment(aes(x= 2.75,y = 60,xend = 3.24,yend = 60)) +
+  geom_segment(aes(x= 3.75,y = 50,xend = 4.25,yend = 50))+
+  geom_segment(aes(x= 4.75,y = 80,xend = 5.25,yend = 80))+
+  annotate("text", x=1, y=62, label="n.s.", size=3)+
+  annotate("text", x=2, y=51, label="*", size=5)+
+  annotate("text", x=3, y=61, label="***", size=5)+
+  annotate("text", x=4, y=51, label="*", size=5)+
+  annotate("text", x=5, y=82, label="n.s.", size=3)+
+  scale_fill_manual(values=c('#999999','#E69F00'))
+p
+
+
+scale_fill_brewer(palette = "Paired")
+
+```
+
+```{r,echo=FALSE}
+cpp.aov <- aov(Percent~(Dose*Test),data=CPP)
+summary(cpp.aov)
+```
+
+```{r,echo=FALSE,eval=FALSE}
+
+cpp.aov <- aov(Percent~(Dose*Test),data=CPP)
+aovtable <- summary(cpp.aov)
+
+SS <- aovtable[[2]][[1]]$"Sum Sq"
+SS_error_subject_interval <- tail(SS, n=1)[[1]];   SS_error_subject_interval
+MS <- aovtable[[2]][[1]]$"Mean Sq"
+MS_error_subject_interval <- tail(MS, n=1)[[1]];   MS_error_subject_interval
+df <- aovtable[[2]][[1]]$"Df"
+df_error_subject_interval     <- tail(df, n=1)[[1]];  df_error_subject_interval
+df_Interval <- df[1]; df_Interval
+df_Group_Interval <- df[2]; df_Group_Interval
+
+
+print("Simple Main Effect of Interval at each Group")
+grouplist <- c("1mg","3mg","7.5mg","15mg")
+
+```
+
+```{r,echo=FALSE,eval=FALSE}
+grouplist <- c("1mg","3mg","7.5mg","15mg")
+for (i in  grouplist) {
+  print(paste("Group:", i ))
+  tempdata <- subset(cpp, dose == i)
+  temp.anova <-  anova(aov(Percent ~ test, data= tempdata))
+  temp.anova$"Df"[2] <- df_error_subject_interval
+  temp.anova$"Sum Sq"[2]  <- SS_error_subject_interval
+  temp.anova$"Mean Sq"[2] <- MS_error_subject_interval
+  F_value <-  temp.anova$"Mean Sq"[1] / MS_error_subject_interval
+  temp.anova$"F value"[1] <- F_value 
+  temp.anova$"Pr(>F)"[1] <- pf(F_value, 
+                               df_Interval, df_error_subject_interval , lower.tail=F)
+  print(temp.anova)
+}
+
+TukeyHSD(aov(Percent ~ dose, data= cpp))
+```
+
+
+```{r,echo=FALSE}
+##前後測圖(anesth:all)
+Test<-as.factor(ordered(cpp$test,levels=c("Pre-Test","Post-Test")))
+dose<-as.factor(ordered(cpp$dose,levels=c("1mg","3mg","7.5mg","15mg")))
+
+CPP<-select(cpp,Percent) %>% mutate(Test)%>%cbind(dose)
+
+tempdata = aggregate(CPP$Percent,
+                     by  =list(CPP$Test,CPP$dose),FUN=mean)
+tempdata2 = aggregate(CPP$Percent,
+                      by  =list(CPP$Test,CPP$dose),FUN=sd)
+tempdata3 = aggregate(CPP$Percent,
+                      by  =list(CPP$Test,CPP$dose),FUN=length)
+tempdata = cbind(tempdata,tempdata2[3])
+names(tempdata) = c('Test','dose','Percent','SE')
+tempdata[4] = tempdata[4]/sqrt(tempdata3[3])
+tempdata[2] = as.factor(tempdata[[2]])
+
+
+b=ggplot(data = tempdata,aes(x = dose,y = Percent,fill = Test))+
+  geom_col(position = 'dodge', width = 0.5) +
+  geom_errorbar(aes(x = dose, ymin = Percent-SE,ymax = Percent+SE,color = Test),position = position_dodge(0.5),width = 0.1,color='black')+
+    xlab('Dose')+ ylab('% Preference Score to Caffeine-Paired Chamber (mean±SEM)')+
+  ggtitle('Conditioned Place Preference in Anesthetized Rats')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'Times'),
+        axis.title.x = element_text(family = "Times"),
+        axis.title.y = element_text(family = 'Times'),
+        axis.text.x = element_text(family = 'Times'),
+        axis.text.y = element_text(family = 'Times'),
+        legend.title = element_text(family = 'Times'),
+        legend.text = element_text(family = 'Times'))
+
+b = b +
+  geom_segment(aes(x = 0.75,y=55,xend = 1.25,yend = 55)) +
+  geom_segment(aes(x = 1.75,y = 50,xend = 2.25,yend=50))+
+  geom_segment(aes(x= 2.75,y = 60,xend = 3.24,yend = 60)) +
+  geom_segment(aes(x= 3.75,y = 50,xend = 4.25,yend = 50))+
+  annotate("text", x=1, y=57, label="n.s.", size=3)+
+  annotate("text", x=2, y=51, label="*", size=5)+
+  annotate("text", x=3, y=61, label="***", size=5)+
+  annotate("text", x=4, y=51, label="*", size=5)+
+  scale_fill_manual(values=c('#999999','#E69F00'))
+b
+```
+
+```{r,echo=FALSE,eval=FALSE}
+
+cpp2 <- read.table(file="cpp_all_3.csv",header = TRUE,sep=",")
+head(cpp2)
+str(cpp2)
+table(cpp2)
+
+
+interaction.plot(cpp2$test,cpp2$dose,cpp2$Percent)
+
+
+library(dplyr)
+CPP2<-filter(cpp2, dose == "Anesth-7.5mg"|dose =="Awake-7.5mg"|dose =="Anesth-15mg"|dose =="Awake-15mg")
+
+Test<-as.factor(ordered(CPP2$test,levels=c("Pre-Test","Post-Test")))
+Dose<-as.factor(ordered(CPP2$dose,levels=c("Anesth-7.5mg","Awake-7.5mg","Anesth-15mg","Awake-15mg")))
+
+
+CPP2<- select(CPP2,Percent) %>%cbind(Test)  %>%cbind(Dose) 
+
+CPP2
+
+
+
+
+tempdata = aggregate(CPP2$Percent,
+                     by  =list(CPP2$Test,CPP2$Dose),FUN=mean)
+tempdata2 = aggregate(CPP2$Percent,
+                      by  =list(CPP2$Test,CPP2$Dose),FUN=sd)
+tempdata3 = aggregate(CPP2$Percent,
+                      by  =list(CPP2$Test,CPP2$Dose),FUN=length)
+tempdata = cbind(tempdata,tempdata2[3])
+names(tempdata) = c('Test','Dose','Percent','SE')
+tempdata[4] = tempdata[4]/sqrt(tempdata3[3])
+tempdata[2] = as.factor(tempdata[[2]])
+
+
+b=ggplot(data = tempdata,aes(x = Dose,y = Percent,fill = Test))+
+  geom_col(position = 'dodge', width = 0.5) +
+  geom_errorbar(aes(x = Dose, ymin = Percent-SE,ymax = Percent+SE,color = Test),position = position_dodge(0.5),width = 0.1,color='black')+
+    xlab('Dose')+ ylab('% Preference Score to Caffeine-Paired Chamber (mean±SEM)')+
+  ggtitle('Place Conditioning  in Anesthetized and in Awake Rats')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'Times'),
+        axis.title.x = element_text(family = "Times"),
+        axis.title.y = element_text(family = 'Times'),
+        axis.text.x = element_text(family = 'Times'),
+        axis.text.y = element_text(family = 'Times'),
+        legend.title = element_text(family = 'Times'),
+        legend.text = element_text(family = 'Times'))
+
+b = b +
+  geom_segment(aes(x = 0.75,y=60,xend = 1.25,yend = 60)) +
+  geom_segment(aes(x = 1.75,y = 55,xend = 2.25,yend=55))+
+  geom_segment(aes(x= 2.75,y = 47,xend = 3.24,yend = 47)) +
+  geom_segment(aes(x= 3.75,y = 37,xend = 4.25,yend = 37))+
+  annotate("text", x=1, y=61, label="***", size=5)+
+  annotate("text", x=2, y=56, label="*", size=5)+
+  annotate("text", x=3, y=48, label="*", size=5)+
+  annotate("text", x=4, y=39, label="n.s.", size=3)+
+  scale_fill_manual(values=c('#999999','#E69F00'))
+
+b
+```
