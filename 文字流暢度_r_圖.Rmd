@@ -1,0 +1,320 @@
+---
+title: "文字流暢性_實驗後訪談_分析繪圖"
+author: "王苡蓁"
+date: "6/9/2019"
+output: html_document
+---
+# 閱讀時間  
+```{r,echo=FALSE ,message=FALSE, warning=FALSE}
+library(dplyr)
+library(tidyverse)
+
+flu<-read.csv("flu.csv")
+
+#readingtime
+rt<-flu$readingtime
+
+m<-lm(score~readingtime, data=flu)
+summary(m)
+
+#order_ gorup
+
+g<-flu$group
+g<-gsub("1",replacement="控制組" ,g)
+g<-gsub("2",replacement="灰階組" ,g)
+g<-gsub("3",replacement="遮蔽組" ,g)
+g<-as.factor(g)
+go<-ordered(g,levels=c("控制組","灰階組","遮蔽組"))
+
+flu_time<-flu %>% select(score) %>% mutate(go,rt)
+
+rt_con<-flu_time %>% filter(.,go=="控制組")
+
+rt_g<-flu_time %>% filter(.,go=="灰階組")
+
+rt_s<-flu_time %>% filter(.,go=="遮蔽組")
+
+
+
+
+require(ggplot2)
+  ggplot(data=flu) +                        # 準備畫布
+    geom_point(aes(x=group,           # 散布圖
+                   y=score,
+                   color=gender)) +         # 把不同品種的資料標上顏色
+    
+    theme_bw()              
+
+ 
+ 
+p <- ggplot(flu_time, aes(x=go, y=score, fill=go)) + geom_boxplot()
+p+
+    xlab('組別')+ ylab('記憶分數')+
+  ggtitle('各組別的記憶分數（mean±SEM）')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'DFKai-SB'),
+        axis.title.x = element_text(family = "DFKai-SB"),
+        axis.title.y = element_text(family = 'DFKai-SB'),
+        axis.text.x = element_text(family = 'DFKai-SB'),
+        axis.text.y = element_text(family = 'DFKai-SB'),
+        legend.title = element_text(family = 'DFKai-SB'),
+        legend.text = element_text(family = 'DFKai-SB'))+labs(fill="組別")
+  
+  
+  
+
+  qplot(x=go,      
+        y=score,
+        data=flu_time,
+        geom="boxplot")+
+    xlab('組別')+ ylab('記憶分數')+
+  ggtitle('各組別的記憶分數（mean）')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'DFKai-SB'),
+        axis.title.x = element_text(family = "DFKai-SB"),
+        axis.title.y = element_text(family = 'DFKai-SB'),
+        axis.text.x = element_text(family = 'DFKai-SB'),
+        axis.text.y = element_text(family = 'DFKai-SB'),
+        legend.title = element_text(family = 'DFKai-SB'),
+        legend.text = element_text(family = 'DFKai-SB'))
+####
+
+rt<-gsub("0",replacement="沒感覺" ,rt)
+rt<-gsub("1",replacement="時間不夠、太短了" ,rt)
+rt<-gsub("2",replacement="剛剛好" ,rt)
+rt<-gsub("3",replacement="時間太長了" ,rt)
+rt<-ordered(rt,levels=c("時間不夠、太短了","剛剛好","時間太長了","沒感覺"))
+rt<-as.factor(rt)
+
+
+#order_ gorup
+
+g<-flu$group
+g<-gsub("1",replacement="控制組" ,g)
+g<-gsub("2",replacement="灰階組" ,g)
+g<-gsub("3",replacement="遮蔽組" ,g)
+g<-as.factor(g)
+go<-ordered(g,levels=c("控制組","灰階組","遮蔽組"))
+
+flu_time<-flu %>% select(score) %>% mutate(go,rt)
+
+rt_con<-flu_time %>% filter(.,go=="控制組")
+
+rt_g<-flu_time %>% filter(.,go=="灰階組")
+
+rt_s<-flu_time %>% filter(.,go=="遮蔽組")
+
+par(family="DFKai-SB")  
+interaction.plot(rt_con$rt,rt_con$go,rt_con$score)
+
+par(family="DFKai-SB")  
+interaction.plot(rt_g$rt,rt_g$go,rt_g$score)
+
+
+par(family="DFKai-SB")  
+interaction.plot(rt_s$rt,rt_s$go,rt_s$score)
+
+par(family="DFKai-SB")  
+interaction.plot(flu_time$rt,flu_time$go,flu_time$score)
+
+
+
+library(ggplot2)
+#dodge
+p=ggplot(data = flu_time) + 
+  geom_bar(mapping = aes(x =go , fill = rt), position = "dodge")+
+    xlab('組別')+ ylab('人數')+
+  ggtitle('各組別對閱讀時間的感受')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'DFKai-SB'),
+        axis.title.x = element_text(family = "DFKai-SB"),
+        axis.title.y = element_text(family = 'DFKai-SB'),
+        axis.text.x = element_text(family = 'DFKai-SB'),
+        axis.text.y = element_text(family = 'DFKai-SB'),
+        legend.title = element_text(family = 'DFKai-SB'),
+        legend.text = element_text(family = 'DFKai-SB'))
+p+labs(fill="閱讀時間感受")
+
+
+#fill
+p=ggplot(data = flu_time) + 
+  geom_bar(mapping = aes(x =go , fill = rt), position = "fill")+
+    xlab('組別')+ ylab('比例')+
+  ggtitle('各組別對閱讀時間的感受')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'DFKai-SB'),
+        axis.title.x = element_text(family = "DFKai-SB"),
+        axis.title.y = element_text(family = 'DFKai-SB'),
+        axis.text.x = element_text(family = 'DFKai-SB'),
+        axis.text.y = element_text(family = 'DFKai-SB'),
+        legend.title = element_text(family = 'DFKai-SB'),
+        legend.text = element_text(family = 'DFKai-SB'))
+
+p+labs(fill="閱讀時間感受")
+
+```
+
+```{r,echo=FALSE}
+library(dplyr)
+library(tidyverse)
+
+flu<-read.csv("flu.csv")
+
+#repeat
+rp<-flu$repeat.
+
+rp<-gsub("1",replacement="11" ,rp)
+rp<-gsub("2",replacement="22" ,rp)
+rp<-gsub("3",replacement="33" ,rp)
+rp<-gsub("4",replacement="44" ,rp)
+rp<-gsub("5",replacement="55" ,rp)
+
+
+rp<-gsub("11",replacement="1-3遍" ,rp)
+rp<-gsub("22",replacement="3-5遍" ,rp)
+rp<-gsub("33",replacement="5-7遍" ,rp)
+rp<-gsub("44",replacement="7-9遍" ,rp)
+rp<-gsub("55",replacement="10遍以上" ,rp)
+rp<-ordered(rp,levels=c("1-3遍","3-5遍","5-7遍","7-9遍","10遍以上" ))
+rp<-as.factor(rp)
+
+
+
+
+#order_ gorup
+
+g<-flu$group
+g<-gsub("1",replacement="控制組" ,g)
+g<-gsub("2",replacement="灰階組" ,g)
+g<-gsub("3",replacement="遮蔽組" ,g)
+g<-as.factor(g)
+go<-ordered(g,levels=c("控制組","灰階組","遮蔽組"))
+
+flu_time<-flu %>% select(score) %>% mutate(go,rp)
+
+##
+
+par(family="DFKai-SB")  
+interaction.plot(flu_time$rp,flu_time$go,flu_time$score)
+
+
+
+
+
+
+
+library(ggplot2)
+#dodge
+p=ggplot(data = flu_time) + 
+  geom_bar(mapping = aes(x =go , fill = rp), position = "dodge")+
+    xlab('組別')+ ylab('人數')+
+  ggtitle('各組別對閱讀次數的感受')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'DFKai-SB'),
+        axis.title.x = element_text(family = "DFKai-SB"),
+        axis.title.y = element_text(family = 'DFKai-SB'),
+        axis.text.x = element_text(family = 'DFKai-SB'),
+        axis.text.y = element_text(family = 'DFKai-SB'),
+        legend.title = element_text(family = 'DFKai-SB'),
+        legend.text = element_text(family = 'DFKai-SB'))
+
+p+labs(fill="閱讀次數")
+
+#fill
+p=ggplot(data = flu_time) + 
+  geom_bar(mapping = aes(x =go , fill = rp), position = "fill")+
+    xlab('組別')+ ylab('比例')+
+  ggtitle('各組別對閱讀次數的感受')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'DFKai-SB'),
+        axis.title.x = element_text(family = "DFKai-SB"),
+        axis.title.y = element_text(family = 'DFKai-SB'),
+        axis.text.x = element_text(family = 'DFKai-SB'),
+        axis.text.y = element_text(family = 'DFKai-SB'),
+        legend.title = element_text(family = 'DFKai-SB'),
+        legend.text = element_text(family = 'DFKai-SB'))
+
+p+labs(fill="閱讀次數")
+
+
+```
+
+
+# 回憶困難度  
+```{r,echo=FALSE}
+library(dplyr)
+library(tidyverse)
+
+flu<-read.csv("flu.csv")
+
+#disturbance
+di<-flu$disturbance
+di<-as.factor(di)
+
+
+
+#order_ gorup
+
+g<-flu$group
+g<-gsub("1",replacement="控制組" ,g)
+g<-gsub("2",replacement="灰階組" ,g)
+g<-gsub("3",replacement="遮蔽組" ,g)
+g<-as.factor(g)
+go<-ordered(g,levels=c("控制組","灰階組","遮蔽組"))
+
+flu_time<-flu %>% select(score) %>% mutate(go,di)
+
+
+par(family="DFKai-SB")  
+interaction.plot(flu_time$di,flu_time$go,flu_time$score)
+
+
+
+
+library(ggplot2)
+#dodge
+p=ggplot(data = flu_time) + 
+  geom_bar(mapping = aes(x =go , fill = di), position = "dodge")+
+    xlab('組別')+ ylab('人數')+
+  ggtitle('各組別對回憶困難度的感受')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'DFKai-SB'),
+        axis.title.x = element_text(family = "DFKai-SB"),
+        axis.title.y = element_text(family = 'DFKai-SB'),
+        axis.text.x = element_text(family = 'DFKai-SB'),
+        axis.text.y = element_text(family = 'DFKai-SB'),
+        legend.title = element_text(family = 'DFKai-SB'),
+        legend.text = element_text(family = 'DFKai-SB'))
+
+p+labs(fill="回憶困難度")
+
+#fill
+p=ggplot(data = flu_time) + 
+  geom_bar(mapping = aes(x =go , fill = di), position = "fill")+
+    xlab('組別')+ ylab('比例')+
+  ggtitle('各組別對回憶困難度的感受')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'DFKai-SB'),
+        axis.title.x = element_text(family = "DFKai-SB"),
+        axis.title.y = element_text(family = 'DFKai-SB'),
+        axis.text.x = element_text(family = 'DFKai-SB'),
+        axis.text.y = element_text(family = 'DFKai-SB'),
+        legend.title = element_text(family = 'DFKai-SB'),
+        legend.text = element_text(family = 'DFKai-SB'))
+
+p+labs(fill="回憶困難度")
+
+```
+
+
+
+```{r,echo=FALSE}
+
+library(corrplot)
+library(dplyr)
+
+flu<-read.csv("flu.csv")
+flu<-flu%>% select(-school,-school_2,-gender)
+
+cor_flu<-cor(flu)
+col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+
+corrplot(cor_flu, method = "shade", type = {"lower"}, shade.col = NA, 
+tl.col = "black", tl.srt = 0, col = col(200), addCoef.col = "black", 
+cl.pos = NULL, order = "AOE")
+
+
+
+```
