@@ -1,0 +1,295 @@
+---
+title: "midterm"
+author: "王苡蓁"
+date: "2019/4/19"
+output: html_document
+---
+#Problem 1.
+###1.請使用下圖來說明 lasso 與 ridge regression 估計準則之意涵，並說明為何 lasso 可獲得稀疏(sparse)之參數解(請用自己的話來說明)。
+
+>(1)在進行回歸分析時，為了避免模型overfitting，也會了對非0的項目進行變數選擇，會在模型加上regularization正規化，也可以說是加上懲罰項（而lasso 與 ridge regression 分別是兩種常用的正規化(regularization)迴歸方法。）。目的在於，有太多非0變項時，可以篩選出其中的比較重要的變項，ridge regression的做法會估計出許多靠近0但非0的係數，也就是說讓beta hat係數逼近0，所以估計圖形呈現的是一個球體；而lasson的做法可以把不重要的變數其係數估計為0，所以可以達到真正篩選變項的目的，lssaon的懲罰項帶有絕對值所以圖形呈現的是正方形。總體來說，ridge實際上就是做了放縮，而lasso實際是做了一個soft thresholding，把很多權重項置0了，所以就能夠得到稀疏的結果。
+
+###2. 請詳細說明如何使用 K 次交叉驗證(K-folds cross validation)，來對 lasso 之正則化參數(regularization parameter)進行選取。
+
+>(2)在進行lasson的正規化時，首先要考慮的就是懲罰項的λ值。這個λ值要訂多大、多小，可以使用K-folds cross validation來找出最佳的λ值。K-fold cross validation的做法是把資料分成k份，分别使用其中的(k-1)份作為training set ，剩下的1份作cross validation的testing set，最后取最后的平均誤差，來評估這個模型。我們所要做的，就是找到平均誤差最小的項目，也就是最佳的λ值。
+
+```{r,comment="",message=FALSE,echo=FALSE,eval=FALSE}
+install.packages("tidyverse")
+install.packages("readr") 
+install.packages("dplyr") 
+install.packages("nnet")
+install.packages("glmnet") 
+install.packages("kknn") 
+install.packages("pROC")
+install.packages("tibble")
+
+library(tidyverse)
+library(readr)
+library(dplyr) 
+library(nnet) 
+library(glmnet) 
+library(kknn)
+library(Lahman) 
+
+```
+#Problem 1.
+###1. 根據 Master 此資料集，已過世的球員中誰的壽命是最長的?
+
+```{r,comment="",message=FALSE}
+#1-1 
+library(Lahman)
+library(tibble)
+library(dplyr)
+data("Batting")
+data("Master")
+data("Salaries")
+
+tbl_Salaries <- tbl_df(Salaries)
+
+tbl_Master<- tbl_df(Master)
+
+m1<-Master %>% select( nameFirst,nameLast,playerID,birthYear,deathYear) %>% na.omit() %>% mutate(.,deathYear-birthYear) %>% arrange(.,desc(deathYear-birthYear))
+head(m1)
+
+ma<-as.matrix(m1)
+cat("\n")
+cat("已過世的球員中誰的壽命是最長的:",m1[1,1],m1[1,2],m1[1,6],"歲")
+
+```
+
+###2. 根據 AwardsPlayers 此資料集，請列出獲得 MVP(Most Valuable Player)獎項超過 2次以上(>2)的選手 id。
+```{r,comment="",message=FALSE}
+#1-2
+library(Lahman)
+data("AwardsPlayers")
+
+m2<-AwardsPlayers %>% filter(.,awardID == "Most Valuable Player") %>% select(.,playerID, awardID) %>% arrange(., playerID)
+
+
+m3<-m2 %>% mutate(duplicated(.)) %>% filter(duplicated(.)=="TRUE")   
+m3
+
+
+#answer
+AwardsPlayers %>% select(playerID, awardID) %>% filter(awardID == "Most Valuable Player") %>% group_by(playerID) %>% summarise(n = n()) %>% filter(n > 2)
+
+
+```
+
+###3. 2016 年仍有上場投球的球員當中(請參考 Pitching)，那一位球員歷年平均薪資(average salary)是最高的?
+```{r,comment="",message=FALSE}
+#1-3
+library(Lahman)
+data("Pitching")
+data("Salaries")
+data("Master")
+
+
+salaries<-Salaries%>% group_by(playerID)%>% summarise(salary_mean = mean(salary))
+
+n<-inner_join(Pitching,salaries,by="playerID")%>%  select(., playerID,yearID, salary_mean)%>% filter(yearID==2016) %>% arrange(desc(salary_mean))
+
+cat(n[1,1],"的平均薪資最高",n[1,3],"元")
+
+
+#answer
+Pitching_2016 <- Pitching %>% filter(yearID == 2016) %>% select(playerID)
+Salaries_mean <- Salaries %>% group_by(playerID) %>% summarise(salary_mean = mean(salary))
+left_join(Pitching_2016, Salaries_mean, by = "playerID") %>% arrange(desc(salary_mean)) %>% head()
+
+```
+###4. 根據 Batting 此資料集，2015 年與 2016 年皆有打擊資料的球員有幾位?請使用簡單線性迴歸(simple linear regression)，以 2015 年安打數(H)預測 2016 年安打數。
+```{r,comment="",message=FALSE}
+library(Lahman)
+data("Batting")
+
+B2015 <- Batting %>% filter(.,yearID=="2015") %>% select(-yearID, -stint, -teamID, -lgID) %>% group_by(playerID)%>% summarise_all(.funs = funs(sum)) %>% select(playerID, H)
+
+
+B2016 <- Batting %>% filter(.,yearID == "2016") %>% select(-yearID, -stint, -teamID, -lgID) %>% group_by(playerID) %>% summarise_all(.funs = funs(sum)) %>% select(playerID, H)
+
+B<-inner_join(B2015,B2016,by="playerID", suffix = c(".2015", ".2016"))
+
+cat("2015 年與 2016 年皆有打擊資料的球員共有：",nrow(B),"個")
+
+lm_fit <- B %>% lm(H.2016  ~ H.2015, data = .) 
+summary(lm_fit)
+
+##########寫錯的
+B2015 <- filter(Batting,yearID=="2015") %>% select(playerID, yearID,H,X2B,X3B,HR,RBI,SH,SF)
+
+B2016 <- filter(Batting,yearID=="2016")%>% select(playerID, yearID,H,X2B,X3B,HR,RBI,SH,SF)
+
+B<-inner_join(B2015,B2016,by="playerID")
+
+B1<-B %>% filter(.,H.x==0, X2B.x==0, X3B.x==0, HR.x==0, RBI.x==0, SH.x==0, SF.x==0,H.y==0, X2B.y==0, X3B.y==0, HR.y==0, RBI.y==0, SH.y==0, SF.y==0) 
+
+nrow(B)
+cat("2015 年與 2016 年皆有打擊資料的球員共有：",length(B1),"個")
+
+lm_fit <- B %>% lm(H.2016  ~ H.2015, data = .) 
+summary(lm_fit)
+##########
+
+
+
+
+```
+
+
+#Problem3
+###1. 請使用 model.matrix 指令創立一設計矩陣(design matrix)，使其包含除了 quality 之外，所有變項之二階交互作用(two-way interaction)。
+```{r,comment="",message=FALSE}
+#3-1
+library(idx2r)
+library(nnet)
+library(dplyr)
+
+library(readr)
+winequality_red <- read_csv("winequality-red.csv")
+y<-winequality_red $quality
+w1<-winequality_red%>% model.matrix(quality ~(.)^2 - 1 ,data=.)
+w1
+
+
+
+
+library(readr)
+wine <- read_csv("winequality-red.csv")
+x <- model.matrix(quality ~ (.)^2 - 1, wine)
+y <- wine$quality
+
+
+
+
+```
+
+###2.請利用以下的 idc_train 來選取訓練用的資料，並考慮以下 lambda_all 中的懲罰強 度(regularization level)，進行 lasso regression。在獲得參數估計後，請以圖呈現迴歸係 數(regression coefficient)如何隨著懲罰強度而變化。
+```{r,comment="",message=FALSE}
+#3-2
+library(glmnet)
+set.seed(9487)
+
+#x
+winequality_red <- read_csv("winequality-red.csv")
+w1<-winequality_red%>% model.matrix(quality ~(.)^2 - 1 ,data=.)
+x<-winequality_red%>% model.matrix(quality ~(.)^2 - 1 ,data=.)
+
+#y
+y<-winequality_red$quality
+
+#train
+idc_train <- sample(x = c(T, F), size = nrow(w1),
+replace = TRUE, prob = c(0.7, 0.3)) 
+
+#lambda
+lambda_all <- exp(seq(0, -10, length.out = 100))
+
+#regression
+glmnet_fit <- glmnet(x[idc_train, ], y[idc_train],
+                     alpha = 1, lambda = lambda_all,
+                     family = "gaussian", standardize = TRUE)
+
+#plot coefficient of 100 lambda
+plot(glmnet_fit, xvar = "lambda")
+
+
+cv_glmnet_fit <- cv.glmnet(x[idc_train, ], y[idc_train], alpha = 1, lambda = lambda_all, family = "gaussian", nfolds = 5, type.measure = "deviance")
+
+
+
+cat("獲得參數-最佳lambda： ",cv_glmnet_fit$lambda.min)
+cat("\n")
+
+
+glmnet_fit%>% predict(s = cv_glmnet_fit$lambda.min, type = "coefficients")
+glmnet_fit%>% plot(xvar = "lambda")
+abline(v = log(cv_glmnet_fit$lambda.min), lty = 2)
+
+
+```
+
+###3.仍使用前述之資料，利用 10-fold cross-validation，從 lambda_all 中選出一最為適切之 懲罰強度(optimal regularization level)，報告其數值。
+```{r,comment="",message=FALSE}
+#3-3
+#k-fold CV
+library(kknn)
+
+#x
+winequality_red <- read_csv("winequality-red.csv")
+x<-winequality_red%>% model.matrix(quality ~(.)^2 - 1 ,data=.)
+
+#y
+y<-winequality_red$quality
+
+#10-fold CV
+cv_glm3 <- cv.glmnet(x[idc_train, ], y[idc_train], 
+                     alpha = 1, lambda = lambda_all,
+                     family = "gaussian", nfolds = 10,
+                     type.measure = "deviance")
+
+#ans:最適切之懲罰強度，使/loss function/ MSE/ 誤差最小的項目即是最佳懲罰強度（lambda）
+cat("最適切之懲罰強度 : ", cv_glm3$lambda.min)
+cat("\n")
+
+
+```
+
+
+###4.請使用 idc_train 中為 FALSE 的資料(即 test 資料)，評估前述分析中最佳模型之 R2 (coefficient of determination)。
+```{r,comment="",message=FALSE}
+#3-4
+
+y_hat_test <- cv_glm3 %>% predict(s = cv_glm3$lambda.min,
+                                  newx = x[!idc_train,],
+                                  type = "link")
+
+R2<-1 - mean((y[!idc_train] - y_hat_test)^2) /var(y[!idc_train])
+
+cat("R-square:" ,R2)
+cat("\n")
+
+```
+###5.請報告最佳模型下，迴歸係數不為零之共變量(covariate)與其係數估計。
+```{r,comment="",message=FALSE}
+#3-5 
+cv_glm3 %>% predict(s = cv_glm3$lambda.min, type = "coefficients") %>% "["(., which(. !=0), )
+
+```
+
+
+Problem 4.
+###4-1
+```{r,comment="",message=FALSE}
+#4-1
+
+library(idx2r)
+x <- read_idx("t10k-images-idx3-ubyte") 
+y <- read_idx("t10k-labels-idx1-ubyte") 
+x[x < 0] <- 256 + x[x < 0]
+x <- array(x, dim = c(10000, 28 * 28))
+y <- as.factor(y)
+pca_fit <- princomp(x)
+pc_all <- pca_fit$score
+df <- data.frame(y, pc_all[, 1:30])
+
+
+```
+
+
+
+###4-2
+```{r,comment="",message=FALSE}
+#4-2
+
+set.seed(9487)
+idx_train <- sample(1:10000, 7000) 
+idx_train <- sample(1:10000, 7000) 
+
+
+library(nnet)
+multinom_fit <- multinom(y ~ ., data = df[idx_train, ], maxit = 500)
+
+y_hat_test <- predict(multinom_fit, df[idx_test, ], type = "class")
+mean(df$y[idx_test] != y_hat_test)
+```

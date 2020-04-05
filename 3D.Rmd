@@ -1,0 +1,131 @@
+---
+title: "受試者路徑圖gif"
+author: "王苡蓁"
+date: "9/3/2019"
+output: html_document
+---
+
+```{r,echo=FALSE ,message=FALSE, warning=FALSE,include=FALSE,eval=FALSE}
+library(ggplot2)
+track<-read.csv("map_track.csv")
+track
+
+
+plot(track$x,track$y)
+
+#
+
+plot(track$x,track$y,type="c")
+plot(track$x,track$y,type="o")
+plot(track$x,track$y,type="n")
+
+
+ggplot(data = track) +
+ # geom_line(mapping = aes(y = y, x = x)) + 
+  geom_point(mapping = aes(y = y, x = x)) +
+
+    xlab('Dose')+ ylab('% Preference Score to Caffeine-Paired Chamber (mean±SEM)')+
+  ggtitle('Place Conditioning in Anesthetized Rats')+
+    xlab('X軸（步）')+ ylab('Ｙ軸（步）')+
+  ggtitle('受試者路徑圖')+
+  theme(plot.title = element_text(hjust = 0.5,size = 13,family = 'DFKai-SB'),
+        axis.title.x = element_text(family = "DFKai-SB"),
+        axis.title.y = element_text(family = 'DFKai-SB'),
+        axis.text.x = element_text(family = 'DFKai-SB'),
+        axis.text.y = element_text(family = 'DFKai-SB'),
+        legend.title = element_text(family = 'DFKai-SB'),
+        legend.text = element_text(family = 'DFKai-SB'))
+```
+
+
+```{r,echo=FALSE ,message=FALSE, warning=FALSE,include=FALSE,eval=FALSE}
+
+##最重要的code：畫圖、畫完下載
+track<-read.csv("map_track.csv")
+
+p<-plot(track$x,track$y,type="n")
+L<-length(track$x)
+
+for(i in c(1:L)){ # for-loop裡，i會依序帶入1~L的值，重複進行括號內的程式碼
+  # 迴圈內重複進行的動作
+  t<-track[1:i,]
+  k<-track[i,]
+      yourfilename=paste("plot",i,".png",sep="")
+      png(file=yourfilename)
+        pi<-p+plot(t$x,t$y,type="c",xlab="x軸",ylab="y軸",main="路徑圖",cex.lab=1.7,cex.main=2,
+               family = 'DFKai-SB',col="black",xlim=c(1,4),ylim=c(1,4),pch=19)
+        ai<-pi+points(k,col="red",pch=19)
+          ai
+        dev.off()
+}
+
+##下載magick包
+
+install.packages("magick")
+library(magick)
+
+#######
+
+gif2frames <- function(pathIn='',
+                       pathOut='',
+                       ImageMagick_path='',
+                       frameFormat='png',
+                       prefixFrame='/frame_%05d.'){
+
+  ##### arguments
+  # pathIn: gif文件所在路径
+  # pathOut: 图片保存路径
+  # ImageMagick_path: ImageMagick convert命令所在路径
+  # frameFormat: 图片保存的格式类型
+  # prefixFrame: 图片文件名的格式
+
+  ##### return
+  # None
+
+  if(!dir.exists(pathOut))  ##自动创建保存图片的文件夹
+    dir.create(pathOut)
+
+  command <- paste(ImageMagick_path, pathIn, '-coalesce', paste0(pathOut, prefixFrame, frameFormat))
+  #system('F:R_tutorials/gif/ImageMagick-7.0.8-64bit/convert test.gif -coalesce ./frames/frame_%05d.png')
+  system(command)  ##调用外部的ImageMagick程序
+}
+
+
+pathIn <- '/Users/Apple/Desktop/pic'
+pathOut <- '/Users/Apple/Desktop/pic/newpic'
+ImageMagick_path <- ''
+
+gif2frames(pathIn, pathOut, ImageMagick_path)
+
+
+```
+
+```{r ,message=FALSE, warning=FALSE}
+#繪製gif
+#devtools::install_github("ropensci/magick")
+
+track<-read.csv("map_track.csv")
+
+img <- magick::image_graph()
+
+p<-plot(track$x,track$y,type="n")
+L<-length(track$x)
+
+for(i in c(1:L)){ 
+  t<-track[1:i,]
+  k<-track[i,]
+      pi<-p+plot(t$x,t$y,type="c",xlab="x軸",ylab="y軸",main="路徑圖",cex.lab=1.7,cex.main=2,
+               family = 'DFKai-SB',col="black",xlim=c(1,4),ylim=c(1,4),pch=19)
+        ai<-pi+points(k,col="red",pch=19)
+          ai
+}
+
+dev.off()
+
+anim <-magick:: image_animate(img,fps =5)
+anim 
+
+```
+
+> 還沒解決的問題：紅色點點目前還不是使用真正受試者走動的秒數設定速度。但是停頓時間的比例是相同的。
+

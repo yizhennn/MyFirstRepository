@@ -1,0 +1,83 @@
+---
+title: "HW11_2"
+author: "王苡蓁"
+date: "5/17/2019"
+output: html_document
+---
+
+###HW11?2
+```{r,comment="",message=FALSE,warning=FALSE}
+nf <- layout(matrix(c(0,1,2,3),2,2,byrow=TRUE), widths=c(2,5), heights=c(3,5))
+layout.show(nf)
+
+#plot1
+density<-density(mtcars$mpg)
+plot(density,main=" ",xlab = "",ylab = " ", axes=FALSE,col="red")
+polygon(density,col="red",border="red")
+
+#plot2
+
+density<-density(mtcars$wt)
+plot(density,main=" ",xlab = "",ylab = " ", axes=FALSE,col="red")
+polygon(density,col="red",border="red")
+
+#plot3
+
+
+plot(mtcars$mpg,mtcars$w )
+abline(lm(mpg~wt,data=mtcars),col="green")
+
+
+```
+
+
+```{r setup, include=FALSE}
+d.mpg<-density(mtcars$mpg)
+d.w<-density(mtcars$wt)
+nf<-layout(matrix( c(0,3,3,2,1,1,2,1,1),ncol=3),widths=c(1,0.5,3),heights=c(1,0.5,3))
+#nf <- layout(matrix(c(0,2,3,1),2,2,byrow=TRUE), widths=c(1,3), heights=c(1,3))
+#layout.show(nf)
+par(mar=c(4,4,1,1))
+plot(mtcars$wt, mtcars$mpg,ylab="Miles/(US) gallon",xlab="Weight (1000 lbs)",cex.lab=1.5,pch=16)
+grid()
+fit<-lm(mtcars$mpg~mtcars$wt)
+abline(fit$coefficients[1], fit$coefficients[2],col="green",lwd=2)
+#lines(mtcars$wt, predict(lm(mtcars$mpg~mtcars$wt)))
+par(mar=c(0,3,1,1))
+plot(d.w$x,d.w$y,axes=F,type="n")
+polygon(d.w$x,d.w$y,col="red",border=NA)
+par(mar=c(3,0,1,1))
+plot(d.mpg$y,d.mpg$x,xlim=rev(range(d.mpg$y)),type = "n",axes=F)
+polygon(d.mpg$y,d.mpg$x,xlim=rev(range(d.mpg$y)),border = NA,col="red")
+```
+
+###HW12 heatmap
+```{r,comment="",message=FALSE,warning=FALSE}
+library(RColorBrewer)
+mycol<-brewer.pal(4,'Greys')
+values<-matrix(c(1,2,3,4),2,2)
+values
+
+heatmap(values,Colv = NA, Rowv=NA, scale = 'none',col=mycol)
+
+
+
+mycol<-brewer.pal(9,'Greys')
+values<-matrix(c(1:9),3,3)
+values
+
+heatmap(values,Colv = NA, Rowv=NA, scale = 'none')
+
+
+scale(values)
+heatmap(values,Colv = NA, Rowv=NA, scale = 'column')
+
+df <- scale(mtcars)
+heatmap(df, Colv=NA, Rowv=NA, scale = "none") 
+
+#群集分析
+heatmap(df, Rowv=NA, scale = "none") #行的集群
+heatmap(df, Colv=NA, scale = "none")#列的集群
+```
+
+

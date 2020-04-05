@@ -1,0 +1,180 @@
+---
+title: "Introductory Applied Machine Learning:HW1"
+author: "腦與心智所 碩一 王苡蓁"
+
+output: html_document
+---
+
+```{r,comment="",message=FALSE,echo=FALSE,eval=FALSE}
+install.packages("tidyverse")
+install.packages("readr") 
+install.packages("dplyr") 
+install.packages("nnet")
+install.packages("glmnet") 
+install.packages("kknn") 
+install.packages("pROC")
+
+library(tidyverse)
+library(readr)
+library(dplyr) 
+library(nnet) 
+library(glmnet) 
+library(kknn)
+
+
+```
+
+# Problem 1 (Probability density function)
+
+(a) What is the value of 𝐾 for the density to be a probability density function? What are the mean and variance of the distribution?  
+
+      > K= π ；mean和variance都沒有定義、不存在。
+
+(b) What is the height h of the density function? What are the mean and variance of the distribution? What is the probability that x lies in the interval between the vertical lines marked by 𝑐 and 𝑑?
+
+      **[ $Answers$ ]**   
+      The height $h=\cfrac{1}{2a}$；   
+      uniform probability density的mean沒有定義 ；   
+      variance＝$\cfrac{ a^{2}}{3}$；   
+      $\cfrac{d-c}{2a}$  
+
+
+(c) Consider two fair dice with six sides marked with the usual numbers 1 through 6. What is the probability that a throw of the dice results in a score of 7? What is the mean of the numbers that arise when two dice are thrown? What is the variance?
+
+      **[ $Answers$ ]**  
+      
+      0.16；   
+      The mean of the numbers＝$E[X]$＝$\cfrac{252}{36}$＝7；   
+      Variance＝$E[(x-7)^{2}]$＝110
+      
+      
+# Problem 2 (Sample statistics and confidence intervals)  
+
+(a) Estimate the mean of the noise voltages and the variance of the mean.
+
+```{r,comment="",message=FALSE}
+#import data 
+noise <-c(-0.4326, -1.6656,0.1253,0.2877,-1.1465,1.1909,1.1892,-0.0376,0.3273, 0.1746)
+#mean
+cat ("The mean of the noise voltages:",mean(noise))  
+
+#varience
+cat ("The variance of the mean:",sd(noise))
+
+```
+
+(b) Calculate the 95% and 99% confidence intervals of the mean (of noise voltages).
+```{r,comment="",message=FALSE}
+noise <-c(-0.4326,-1.6656,0.1253,0.2877,-1.1465,1.1909,1.1892,-0.0376,0.3273, 0.1746)
+
+mean<-mean(noise)
+sd<-sd(noise)
+n<-length(noise)
+
+#The 95% confidence intervals
+
+up_95<-mean+(1.96*(sd/sqrt(n)))
+
+down_95<-mean-(1.96*(sd/sqrt(n)))
+
+cat("The 95% confidence intervals:[",down_95,",",up_95,"]")  
+
+#The 99% confidence intervals
+
+up_99<-mean+(2.576*(sd/sqrt(n)))
+
+down_99<-mean-(2.576*(sd/sqrt(n)))
+
+cat("The 99% confidence intervals:[",down_99,",",up_99,"]")
+```
+
+(c) How confident are we that the noise voltage at any time lies between 1μ𝑉 and 1.1μ𝑉?
+
+
+> 我們對於雜訊落在1和1.1這個區間的信心水準小於1%。因為它掉出了99%的信賴區間。
+
+
+
+# Problem 3 (Calculus)  
+
+Let$f(x,y)= 3x^{2}+y^{2}-xy-11x$
+
+(a) Find $\frac{\partial f}{\partial x}$, the partial derivative of 𝑓 with respect to x. Also find $\frac{\partial f}{\partial y}$.
+
+$$\frac{\partial f}{\partial x}=6x-y-11$$
+
+
+$$\frac{\partial f}{\partial y}=2y-x$$
+
+(b) Find the pair$(x,y) \in R^{2}$ that minimizes $f$.  
+  
+    $6x-y-11$和$2y-x$解連立  
+    $Answer:(2,1)$
+
+(c) Show that the pair$(x,y)$you found in (b) is a minimizer of a maximizer.  
+
+    $f_x(2,1)=0、f_y(2,1)=0$
+    $d=f_{xx}(2,1)f_{yy}(2,1)-[f_{xy}(2,1)]^{2}=6\times2-[(-1)]^2=11$  
+    $d>0$且$f_{xy}(2,1)>0$，則函數在點有相對極小值。所以(2,1)這個點是相對極小值。
+  
+
+# Problem 4 (Vector Norms)
+Compute the 0, 1, 2, and ∞ norms for $[3,-1,3,5,0,2]^{T}$.
+
+### L0 Norm:
+$$||x||_{0}=(\sum_{i=1}^{n} |xi|^{0})^{1/0}= 無意義$$
+
+### L1 Norm:
+$$||x||_{1}=(\sum_{i=1}^{n} |xi|)^{1/2}=| 3+1+3+5+0+2 |= 14$$
+
+### L2 Norm:
+$$||x||_{2}=(\sum_{i=1}^{n} xi ^2)^{1/2} = (9+1+9+25+0+2)^{1/2} \approx 6.78$$
+
+### L-infinity norm:
+
+$$ ||x||_{\infty}=max |xi| =5 $$
+
+
+# Problem ５(t-Test)
+
+(a) Determine a 90% confidence interval for the difference in population means.
+
+
+      > McDonald’s   [39.3,47.3]   
+        Burger King [45.1,52.9] 
+
+```{r , echo=FALSE,message=FALSE,eval=FALSE}
+
+Mc<-c(35, 39, 43, 52, 53, 55, 34, 37, 45, 40)
+BK<-c(51, 55, 52, 43, 44)
+
+
+
+
+```
+
+
+
+(b) Find out if the two means are different with significance level of 0.01 and 0.05.
+
+
+```{r,echo=TRUE,message=FALSE}
+
+McBk<-read.csv("mcbk.csv",header = TRUE)
+#confident level of 0.01
+t.test(McBk, alternative = c("two.sided"), paired = FALSE,conf.level = 0.90)
+
+```
+     
+  >p-value=9.606e-13，McDonald’s和Burger
+        King在95%的信心水準之下，他們的薯條長度有顯著差異。
+
+```{r,echo=TRUE,message=FALSE}
+McBk<-read.csv("mcbk.csv",header = TRUE)
+#confident level of 0.05
+t.test(McBk, alternative = c("two.sided"), paired = FALSE,conf.level = 0.95)
+
+
+```
+  >p-value=9.606e-13，McDonald’s和Burger
+       King在90%的信心水準之下，他們的薯條長度有顯著差異。
